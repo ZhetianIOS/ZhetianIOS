@@ -1,0 +1,40 @@
+name: Build iOS IPA
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Build IPA (unsigned)
+      run: |
+        xcodebuild archive \
+          -project ZhetianIOS.xcodeproj \
+          -scheme ZhetianIOS \
+          -configuration Release \
+          -archivePath build/ZhetianIOS.xcarchive \
+          -sdk iphoneos \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_ALLOWED=NO
+
+    - name: Export IPA
+      run: |
+        mkdir -p build/Payload
+        cp -R build/ZhetianIOS.xcarchive/Products/Applications/ZhetianIOS.app build/Payload/
+        cd build
+        zip -r ZhetianIOS.ipa Payload
+        ls -lh ZhetianIOS.ipa
+
+    - name: Upload IPA artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ZhetianIOS-ipa
+        path: build/ZhetianIOS.ipa
