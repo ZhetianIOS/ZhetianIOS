@@ -1,0 +1,28 @@
+workflows:
+  ios-ipa:
+    name: Build iOS IPA
+    instance: macos-monterey
+    max_build_duration: 30
+    environment:
+      xcode: latest
+    scripts:
+      - name: Build IPA
+        script: |
+          xcodebuild archive \
+            -project ZhetianIOS.xcodeproj \
+            -scheme ZhetianIOS \
+            -configuration Release \
+            -archivePath $HOME/build/ZhetianIOS.xcarchive \
+            -sdk iphoneos \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+      - name: Export IPA
+        script: |
+          mkdir -p $HOME/build/Payload
+          cp -R $HOME/build/ZhetianIOS.xcarchive/Products/Applications/ZhetianIOS.app $HOME/build/Payload/
+          cd $HOME/build
+          zip -r ZhetianIOS.ipa Payload
+          ls -lh ZhetianIOS.ipa
+    artifacts:
+      - $HOME/build/ZhetianIOS.ipa
